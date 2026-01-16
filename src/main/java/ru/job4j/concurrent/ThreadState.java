@@ -2,27 +2,21 @@ package ru.job4j.concurrent;
 
 public class ThreadState {
     public static void main(String[] args) {
-        Thread first = new Thread(
-                () -> {
-                }
-        );
-        System.out.println(first.getName() + " " + first.getState());
-        first.start();
-        while (first.getState() != Thread.State.TERMINATED) {
-            System.out.println(first.getState());
-        }
-        System.out.println(first.getName() + " " + first.getState());
+        Thread[] threads = {
+                new Thread(() -> {
+                }),
+                new Thread(() -> {
+                })
+        };
 
-        Thread second = new Thread(
-                () -> {
-                }
-        );
-        System.out.println(second.getName() + " " + second.getState());
-        second.start();
-        while (second.getState() != Thread.State.TERMINATED) {
-            System.out.println(second.getState());
+        for (Thread thread : threads) {
+            System.out.println(thread.getName() + " " + thread.getState());
+            thread.start();
+            while (thread.getState() != Thread.State.TERMINATED) {
+                System.out.println(thread.getState());
+            }
+            System.out.println(thread.getName() + " " + thread.getState());
         }
-        System.out.println(second.getName() + " " + second.getState());
 
         System.out.println("Работа завершена!");
     }

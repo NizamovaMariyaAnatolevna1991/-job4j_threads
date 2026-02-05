@@ -1,7 +1,11 @@
 package ru.job4j.thred;
 
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
+
 
 public class Wget implements Runnable {
     private final String url;
@@ -15,35 +19,42 @@ public class Wget implements Runnable {
     @Override
     public void run() {
         byte[] buffer = new byte[1024];
+        long start = System.currentTimeMillis();
         int totalBytes = 0;
 
         try (var input = new URL(url).openStream();
-             var output = new FileOutputStream("downloaded_file")) {
+             var output = new FileOutputStream(getFileName(url))) {
 
             int bytesRead;
             while ((bytesRead = input.read(buffer, 0, buffer.length)) != -1) {
-                long start = System.nanoTime();
-
                 output.write(buffer, 0, bytesRead);
                 totalBytes += bytesRead;
 
-                long elapsedNs = System.nanoTime() - start;
-                long elapsedMs = elapsedNs / 1_000_000;
+                if (totalBytes >= speed) {
+                    long elapsedMs = System.currentTimeMillis() - start;
+                    long pauseMs = 1000 - elapsedMs;  // 1000 мс = 1 секунда
 
-                long requiredTimeMs = (long) Math.ceil((double) bytesRead / speed);
-                long pauseMs = requiredTimeMs - elapsedMs;
+                    if (pauseMs > 0) {
+                        Thread.sleep(pauseMs);
+                        System.out.println("Сделали паузу " + pauseMs + " мс");
+                    }
 
-                if (pauseMs > 0) {
-                    Thread.sleep(pauseMs);
-                    System.out.println("Сделали паузу " + pauseMs);
+                    totalBytes = 0;
+                    start = System.currentTimeMillis();
                 }
-
             }
-            System.out.printf("\rDownload complete: %d bytes%n", totalBytes);
+
+            System.out.println("\nDownload complete: " + getFileName(url));
 
         } catch (Exception e) {
             System.err.println("Download error: " + e.getMessage());
+            e.printStackTrace();
         }
+    }
+
+    private String getFileName(String url) {
+        String name = url.substring(url.lastIndexOf('/') + 1).split("\\?")[0];
+        return name.isEmpty() ? "downloaded_file" : name;
     }
 
     public static void main(String[] args) throws InterruptedException {

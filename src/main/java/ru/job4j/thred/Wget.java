@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-
 public class Wget implements Runnable {
     private final String url;
     private final int speed;

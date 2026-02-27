@@ -6,7 +6,6 @@ import net.jcip.annotations.ThreadSafe;
 import java.util.HashMap;
 import java.util.Optional;
 
-
 public class AccountStorage {
 
     private final HashMap<Integer, Account> accounts = new HashMap<>();

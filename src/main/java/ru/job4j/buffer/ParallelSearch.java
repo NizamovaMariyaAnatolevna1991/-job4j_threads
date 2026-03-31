@@ -15,8 +15,6 @@ public class ParallelSearch {
                             Thread.currentThread().interrupt();
                         }
                     }
-
-
                 }
         );
         consumer.start();
@@ -35,7 +33,6 @@ public class ParallelSearch {
                         }
                     }
                 }
-
         ).start();
     }
 }

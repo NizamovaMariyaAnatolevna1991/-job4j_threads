@@ -18,7 +18,11 @@ class SimpleBlockingQueueTest {
 
         Thread producer = new Thread(() -> {
             for (int i = 1; i <= 5; i++) {
-                queue.offer(i);
+                try {
+                    queue.offer(i);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
                 produced.add(i);
             }
         });
@@ -53,13 +57,25 @@ class SimpleBlockingQueueTest {
         List<String> log = new ArrayList<>();
 
         Thread producer = new Thread(() -> {
-            queue.offer(1);
+            try {
+                queue.offer(1);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
             log.add("Producer: added 1");
-            queue.offer(2);
+            try {
+                queue.offer(2);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
             log.add("Producer: added 2");
 
             log.add("Producer: trying to add 3 (should wait)");
-            queue.offer(3); // Здесь должен заблокироваться, пока потребитель не заберет
+            try {
+                queue.offer(3); // Здесь должен заблокироваться, пока потребитель не заберет
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
             log.add("Producer: added 3");
 
         });
@@ -111,7 +127,11 @@ class SimpleBlockingQueueTest {
                 Thread.currentThread().interrupt();
             }
             log.add("Producer: adding element");
-            queue.offer(42);
+            try {
+                queue.offer(42);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         consumer.start();

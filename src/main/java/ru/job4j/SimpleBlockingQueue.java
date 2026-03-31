@@ -18,15 +18,10 @@ public class SimpleBlockingQueue<T> {
         this.capacity = capacity;
     }
 
-    public void offer(T value) {
+    public void offer(T value) throws InterruptedException {
         synchronized (monitor) {
             while (queue.size() >= capacity) {
-                try {
-                    monitor.wait();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    e.printStackTrace();
-                }
+                monitor.wait();
             }
 
             queue.add(value);
@@ -37,12 +32,7 @@ public class SimpleBlockingQueue<T> {
     public T poll() throws InterruptedException {
         synchronized (monitor) {
             while (queue.isEmpty()) {
-                try {
-                    monitor.wait();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    e.printStackTrace();
-                }
+                monitor.wait();
             }
 
             T result = queue.poll();

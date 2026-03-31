@@ -1,0 +1,127 @@
+package ru.job4j;
+
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class SimpleBlockingQueueTest {
+
+    @Test
+    void whenProducerAndConsumerWorkThenQueuePassesElements() throws InterruptedException {
+        SimpleBlockingQueue<Integer> queue = new SimpleBlockingQueue<>(5);
+        List<Integer> produced = new ArrayList<>();
+        List<Integer> consumed = new ArrayList<>();
+
+        Thread producer = new Thread(() -> {
+            for (int i = 1; i <= 5; i++) {
+                queue.offer(i);
+                produced.add(i);
+            }
+        });
+
+        Thread consumer = new Thread(() -> {
+            for (int i = 0; i < 5; i++) {
+                try {
+                    Integer val = queue.poll();
+                    if (val != null) {
+                        consumed.add(val);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
+
+        producer.start();
+        consumer.start();
+
+        producer.join();
+        consumer.join();
+
+        assertEquals(5, produced.size());
+        assertEquals(5, consumed.size());
+        assertEquals(produced, consumed);
+    }
+
+    @Test
+    void whenQueueIsFullThenProducerWaits() throws InterruptedException {
+        SimpleBlockingQueue<Integer> queue = new SimpleBlockingQueue<>(2);
+        List<String> log = new ArrayList<>();
+
+        Thread producer = new Thread(() -> {
+            queue.offer(1);
+            log.add("Producer: added 1");
+            queue.offer(2);
+            log.add("Producer: added 2");
+
+            log.add("Producer: trying to add 3 (should wait)");
+            queue.offer(3); // Здесь должен заблокироваться, пока потребитель не заберет
+            log.add("Producer: added 3");
+
+        });
+
+        Thread consumer = new Thread(() -> {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            log.add("Consumer: waking up and taking element");
+            try {
+                queue.poll();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+
+        producer.start();
+        consumer.start();
+
+        producer.join();
+        consumer.join();
+
+        assertTrue(log.contains("Producer: trying to add 3 (should wait)"));
+        assertTrue(log.contains("Producer: added 3"));
+        assertTrue(log.indexOf("Producer: added 3") > log.indexOf("Consumer: waking up and taking element"));
+    }
+
+    @Test
+    void whenQueueIsEmptyThenConsumerWaits() throws InterruptedException {
+        SimpleBlockingQueue<Integer> queue = new SimpleBlockingQueue<>(5);
+        List<String> log = new ArrayList<>();
+
+        Thread consumer = new Thread(() -> {
+            log.add("Consumer: start (should wait)");
+            try {
+                Integer val = queue.poll();
+                log.add("Consumer: received " + val);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+
+        Thread producer = new Thread(() -> {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            log.add("Producer: adding element");
+            queue.offer(42);
+        });
+
+        consumer.start();
+        producer.start();
+
+        producer.join();
+        consumer.join();
+
+        assertTrue(log.contains("Consumer: start (should wait)"));
+        assertTrue(log.contains("Consumer: received 42"));
+        assertTrue(log.indexOf("Consumer: received 42") > log.indexOf("Producer: adding element"));
+    }
+}

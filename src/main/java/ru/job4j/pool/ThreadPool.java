@@ -11,7 +11,7 @@ public class ThreadPool {
     private final SimpleBlockingQueue<Runnable> tasks;
 
     public ThreadPool(int queueCapacity) {
-        this.tasks = new SimpleBlockingQueue<>(queueCapacity);;
+        this.tasks = new SimpleBlockingQueue<>(queueCapacity);
         int size = Runtime.getRuntime().availableProcessors();
 
         System.out.println("size " + size);
